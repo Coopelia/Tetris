@@ -11,37 +11,32 @@ void Tetris::Start()
 {
 	score = 0;
 	memset(Field, 0, sizeof(Field));
-	memset(list, 0, sizeof(list));
+	memset(b7array, 0, sizeof(b7array));
+	memset(Field, 0, sizeof(Field));
 	isRotate = false;
 	isHardDrop = false;
 	timer = 0;
 	delay = 0.5;
-	list_num = 0;
+	b7Int = 0;
 
 	if (role == 1)
 	{
-		mCornPoint = { P1_STAGE_CORNER_X,	P1_STAGE_CORNER_Y };
-		nextSquareCornPoint = { P1_NXET_CORNER_X, P1_NXET_CORNER_Y };
+	    mCorePoint = { P1_STAGE_CORNER_X,	P1_STAGE_CORNER_Y };
+		nextCorePoint = { P1_NXET_CORNER_X, P1_NXET_CORNER_Y };
 	}
 	if (role == 2)
 	{
-		mCornPoint = { P2_STAGE_CORNER_X,	P2_STAGE_CORNER_Y };
-		nextSquareCornPoint = { P2_NXET_CORNER_X, P2_NXET_CORNER_Y };
+		mCorePoint = { P2_STAGE_CORNER_X,	P2_STAGE_CORNER_Y };
+		nextCorePoint = { P2_NXET_CORNER_X, P2_NXET_CORNER_Y };
 	}
 
-	colorNum = 1 + rand() % 7;
-	currentShapeNum = rand() % 7;
+	nowSquare.setColor(1 + rand() % 7);
+	nowSquare.setShape(rand() % 7);
+	nowSquare.setPosition(STAGE_WIDTH / 2 - nowSquare.getWidth() / 2, 0);
 
-	nextcolorNum = 1 + rand() % 7;
-	nextShapeNum = rand() % 7;
-
-	for (int i = 0; i < 4; i++)
-	{
-		currentSquare[i].x = Figures[currentShapeNum][i] % 2 + STAGE_WIDTH / 2;
-		currentSquare[i].y = Figures[currentShapeNum][i] / 2;
-		nextSquare[i].x = Figures[nextShapeNum][i] % 2;
-		nextSquare[i].y = Figures[nextShapeNum][i] / 2;
-	}
+	nextSquare.setColor(1 + rand() % 7);
+	nextSquare.setShape(rand() % 7);
+	nextSquare.setPosition(0, 0);
 }
 
 void Tetris::Input(Event& e)
@@ -51,7 +46,7 @@ void Tetris::Input(Event& e)
 		if (e.type == Event::KeyPressed)
 		{
 			if (e.key.code == Keyboard::W)
-				if (currentShapeNum != 6)
+				if (nowSquare.getShape() != 6)
 					isRotate = true;
 			if (e.key.code == Keyboard::A)
 				Move_x(-1);
@@ -73,7 +68,7 @@ void Tetris::Input(Event& e)
 		if (e.type == Event::KeyPressed)
 		{
 			if (e.key.code == Keyboard::Up)
-				if (currentShapeNum != 6)
+				if (nowSquare.getShape() != 6)
 					isRotate = true;
 			if (e.key.code == Keyboard::Left)
 				Move_x(-1);
@@ -109,142 +104,137 @@ void Tetris::Update()
 		Move_y();
 		timer = 0;
 	}
-	slowLoading();
 	checkLine();
 }
 
 void Tetris::Draw()
 {
-	for (int i = 0; i < STAGE_HEIGHT; i++)
+	for (int i = 0; i < STAGE_WIDTH; i++)
 	{
-		for (int j = 0; j < STAGE_WIDTH; j++)
+		for (int j = 0; j < STAGE_HEIGHT; j++)
 		{
 			if (Field[i][j] == 0)
 				continue;
 			sTiles.setTextureRect(IntRect(Field[i][j] * GRIDSIZE, 0, GRIDSIZE, GRIDSIZE));
-			sTiles.setPosition(j * GRIDSIZE, i * GRIDSIZE);
-			sTiles.move(mCornPoint.x, mCornPoint.y);
+			sTiles.setPosition(i * GRIDSIZE, j * GRIDSIZE);
+			sTiles.move(mCorePoint.x, mCorePoint.y);
 			app->draw(sTiles);
 		}
 	}
 
 	for (int i = 0; i < 4; i++)
 	{
-		sTiles.setTextureRect(IntRect(colorNum * GRIDSIZE, 0, GRIDSIZE, GRIDSIZE));
-		sTiles.setPosition(currentSquare[i].x * GRIDSIZE, currentSquare[i].y * GRIDSIZE);
-		sTiles.move(mCornPoint.x, mCornPoint.y);
+		sTiles.setTextureRect(IntRect(nowSquare.getColor() * GRIDSIZE, 0, GRIDSIZE, GRIDSIZE));
+		sTiles.setPosition(nowSquare.getSquarePosition(i).x * GRIDSIZE, nowSquare.getSquarePosition(i).y * GRIDSIZE);
+		sTiles.move(mCorePoint.x, mCorePoint.y);
 		app->draw(sTiles);
 	}
 
 	for (int i = 0; i < 4; i++)
 	{
-		sTiles.setTextureRect(IntRect(nextcolorNum * GRIDSIZE, 0, GRIDSIZE, GRIDSIZE));
-		sTiles.setPosition(nextSquare[i].x * GRIDSIZE, nextSquare[i].y * GRIDSIZE);
-		sTiles.move(nextSquareCornPoint.x, nextSquareCornPoint.y);
+		sTiles.setTextureRect(IntRect(nextSquare.getColor() * GRIDSIZE, 0, GRIDSIZE, GRIDSIZE));
+		sTiles.setPosition(nextSquare.getSquarePosition(i).x * GRIDSIZE, nextSquare.getSquarePosition(i).y * GRIDSIZE);
+		sTiles.move(nextCorePoint.x, nextCorePoint.y);
 		app->draw(sTiles);
 	}
 }
 
-bool Tetris::hitTest()
+bool Tetris::isHit()
 {
+	if (nowSquare.getPosition().x<0 || nowSquare.getPosition().x + nowSquare.getWidth()>STAGE_WIDTH || nowSquare.getPosition().y + nowSquare.getHeight() > STAGE_HEIGHT)
+		return true;
 	for (int i = 0; i < 4; i++)
 	{
-		if (currentSquare[i].x < 0 || currentSquare[i].x >= STAGE_WIDTH || currentSquare[i].y >= STAGE_HEIGHT)
-			return false;
-		else if (Field[currentSquare[i].y][currentSquare[i].x])
-			return false;
+		if (Field[nowSquare.getSquarePosition(i).x][nowSquare.getSquarePosition(i).y])
+			return true;
 	}
-	return true;
+	return false;
 }
 
-int Tetris::List()
+//∂ØÃ¨∑÷≈‰
+//int Tetris::List()
+//{
+//	if (list_num == 0)
+//	{
+//		for (int i = 0; i < 7; i++)
+//			list[i] = i;
+//		list_num = 7;
+//	}
+//	int k, num;
+//	srand(time(0));
+//	while (true)
+//	{
+//		k = rand() % 7;
+//		if (list[k] != -1)
+//		{
+//			num = list[k];
+//			list[k] = -1;
+//			list_num--;
+//			break;
+//		}
+//	}
+//	return num;
+//}
+
+//æ≤Ã¨∑÷≈‰
+int Tetris::Bag7()
 {
-	if (list_num == 0)
-	{
-		for (int i = 0; i < 7; i++)
-			list[i] = i;
-		list_num = 7;
-	}
-	int k, num;
 	srand(time(0));
-	while (true)
+	if (b7Int == 0)
 	{
-		k = rand() % 7;
-		if (list[k] != -1)
+		int temp[7];
+		for (int i = 0; i < 7; i++)
+			temp[i] = i;
+		int k;
+		while (b7Int<7)
 		{
-			num = list[k];
-			list[k] = -1;
-			list_num--;
-			break;
+			k = rand() % 7;
+			if (temp[k] != -1)
+			{
+				b7array[b7Int++] = temp[k];
+				temp[k] = -1;
+			}
 		}
 	}
-	return num;
+	return b7array[(7 - b7Int--)];
 }
 
 void Tetris::Move_x(int dx)
 {
-	for (int i = 0; i < 4; i++)
-	{
-		tempSquare[i] = currentSquare[i];
-		currentSquare[i].x += dx;
-	}
-	if (!hitTest())
-	{
-		for (int i = 0; i < 4; i++)
-			currentSquare[i] = tempSquare[i];
-	}
+	Square	tempSquare = nowSquare;
+	nowSquare.setPosition(nowSquare.getPosition().x + dx, nowSquare.getPosition().y);
+
+	if (isHit())
+		nowSquare = tempSquare;
 }
 
 void Tetris::Move_y()
 {
-	for (int i = 0; i < 4; i++)
-	{
-		tempSquare[i] = currentSquare[i];
-		currentSquare[i].y += 1;
-	}
+	Square	tempSquare = nowSquare;
+	nowSquare.setPosition(nowSquare.getPosition().x, nowSquare.getPosition().y + 1);
 
-	if (!hitTest())
+	if (isHit())
 	{
 		for (int i = 0; i < 4; i++)
-			Field[tempSquare[i].y][tempSquare[i].x] = colorNum;
-		colorNum = nextcolorNum;
-		currentShapeNum = nextShapeNum;
-		nextcolorNum = 1 + rand() % 7;
-		nextShapeNum = List();
-		for (int i = 0; i < 4; i++)
-		{
-			currentSquare[i] = nextSquare[i];
-			currentSquare[i].x = currentSquare[i].x + STAGE_WIDTH / 2;
-			nextSquare[i].x = Figures[nextShapeNum][i] % 2;
-			nextSquare[i].y = Figures[nextShapeNum][i] / 2;
-		}
-	}
-}
+			Field[tempSquare.getSquarePosition(i).x][tempSquare.getSquarePosition(i).y] = tempSquare.getColor();
 
-void Tetris::slowLoading()
-{
-	for (int i = 0; i < 4; i++)
-	{
-		tempSquare[i] = currentSquare[i];
-		currentSquare[i].y += 1;
-	}
+		nowSquare = nextSquare;
+		nowSquare.setPosition(STAGE_WIDTH / 2 - nowSquare.getWidth() / 2, 0);
 
-	if (!hitTest())
-		delay = 1;
-	for (int i = 0; i < 4; i++)
-		currentSquare[i] = tempSquare[i];
+		nextSquare.setColor(1 + rand() % 7);
+		nextSquare.setShape(rand() % 7);
+		nextSquare.setPosition(0, 0);
+	}
 }
 
 void Tetris::HardDrop()
 {
-	for (int j = 0; j < STAGE_HEIGHT; j++)
+	for (int i = 0; i < STAGE_HEIGHT; i++)
 	{
-		for (int i = 0; i < 4; i++)
-			currentSquare[i].y += 1;
-		if (!hitTest())
+		nowSquare.setPosition(nowSquare.getPosition().x, nowSquare.getPosition().y + 1);
+		if (isHit())
 		{
-			for (int i = 0; i < 4; i++)
-				currentSquare[i].y -= 1;
+			nowSquare.setPosition(nowSquare.getPosition().x, nowSquare.getPosition().y - 1);
 			break;
 		}
 	}
@@ -252,42 +242,24 @@ void Tetris::HardDrop()
 
 void Tetris::Rotate()
 {
-	int mid = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		if (Figures[currentShapeNum][i] == 5)
-		{
-			mid = i;
-			break;
-		}
-	}
-	Vector2i p = currentSquare[mid];
-	for (int i = 0; i < 4; i++)
-	{
-		int x = currentSquare[i].y - p.y;
-		int y = currentSquare[i].x - p.x;
-		currentSquare[i].x = p.x - x;
-		currentSquare[i].y = p.y + y;
-	}
-	if (!hitTest())
-	{
-		for (int i = 0; i < 4; i++)
-			currentSquare[i] = tempSquare[i];
-	}
+	Square	tempSquare = nowSquare;
+	nowSquare.Rotate();
+	if (isHit())
+		nowSquare = tempSquare;
 }
 
 void Tetris::checkLine()
 {
 	int k = STAGE_HEIGHT - 1;
 	int yCount = 0;
-	for (int i = STAGE_HEIGHT - 1; i > 0; i--)
+	for (int j = STAGE_HEIGHT - 1; j > 0; j--)
 	{
 		int xCount = 0;
-		for (int j = 0; j < STAGE_WIDTH; j++)
+		for (int i = 0; i < STAGE_WIDTH; i++)
 		{
 			if (Field[i][j])
 				xCount++;
-			Field[k][j] = Field[i][j];
+			Field[i][k] = Field[i][j];
 		}
 		if (xCount < STAGE_WIDTH)
 			k--;
