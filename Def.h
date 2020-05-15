@@ -14,15 +14,15 @@
 #define  P2_STAGE_CORNER_X		844
 #define  P2_STAGE_CORNER_Y		174
 #define  P1_NXET_CORNER_X		570
-#define  P1_NXET_CORNER_Y		127
+#define  P1_NXET_CORNER_Y		135
 #define  P2_NXET_CORNER_X		720
-#define  P2_NXET_CORNER_Y		127
+#define  P2_NXET_CORNER_Y		135
 #define  P1_SCORE_CORNER_X		366
 #define  P1_SCORE_CORNER_Y		110
 #define  P2_SCORE_CORNER_X		1195
 #define  P2_SCORE_CORNER_Y		110
-#define  HOLD_CORNER_X			660
-#define  HOLD_CORNER_Y			275
+#define  HOLD_CORNER_X			650
+#define  HOLD_CORNER_Y			350
 
 using namespace sf;
 
@@ -30,4 +30,3 @@ extern class Game;
 extern class Tetris;
 extern class Square;
 extern int Figures[7][4];
-extern Square holdSquare;

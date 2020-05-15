@@ -15,6 +15,7 @@ void Tetris::Start()
 	memset(Field, 0, sizeof(Field));
 	isRotate = false;
 	isHardDrop = false;
+	isHold = false;
 	timer = 0;
 	delay = 0.5;
 	b7Int = 0;
@@ -37,6 +38,8 @@ void Tetris::Start()
 	nextSquare.setColor(1 + rand() % 7);
 	nextSquare.setShape(rand() % 7);
 	nextSquare.setPosition(0, 0);
+
+	holdSquare.setColor(0);
 }
 
 void Tetris::Input(Event& e)
@@ -61,6 +64,8 @@ void Tetris::Input(Event& e)
 				isHardDrop = true;
 			if (e.key.code == Keyboard::S)
 				delay = 0.5;
+			if (e.key.code == Keyboard::LShift)
+				isHold = true;
 		}
 	}
 	if (role == 2)
@@ -83,6 +88,8 @@ void Tetris::Input(Event& e)
 				isHardDrop = true;
 			if (e.key.code == Keyboard::Down)
 				delay = 0.5;
+			if (e.key.code == Keyboard::RShift)
+				isHold = true;
 		}
 	}
 }
@@ -98,6 +105,11 @@ void Tetris::Update()
 	{
 		HardDrop();
 		isHardDrop = false;
+	}
+	if (isHold)
+	{
+		holdFunc();
+		isHold = false;
 	}
 	if (timer > delay)
 	{
@@ -137,6 +149,17 @@ void Tetris::Draw()
 		sTiles.move(nextCorePoint.x, nextCorePoint.y);
 		app->draw(sTiles);
 	}
+
+	if (holdSquare.getColor())
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			sTiles.setTextureRect(IntRect(holdSquare.getColor() * GRIDSIZE, 0, GRIDSIZE, GRIDSIZE));
+			sTiles.setPosition(holdSquare.getSquarePosition(i).x * GRIDSIZE, holdSquare.getSquarePosition(i).y * GRIDSIZE);
+			sTiles.move(HOLD_CORNER_X, HOLD_CORNER_Y);
+			app->draw(sTiles);
+		}
+	}
 }
 
 bool Tetris::isHit()
@@ -150,31 +173,6 @@ bool Tetris::isHit()
 	}
 	return false;
 }
-
-//∂ØÃ¨∑÷≈‰
-//int Tetris::List()
-//{
-//	if (list_num == 0)
-//	{
-//		for (int i = 0; i < 7; i++)
-//			list[i] = i;
-//		list_num = 7;
-//	}
-//	int k, num;
-//	srand(time(0));
-//	while (true)
-//	{
-//		k = rand() % 7;
-//		if (list[k] != -1)
-//		{
-//			num = list[k];
-//			list[k] = -1;
-//			list_num--;
-//			break;
-//		}
-//	}
-//	return num;
-//}
 
 //æ≤Ã¨∑÷≈‰
 int Tetris::Bag7()
@@ -217,13 +215,7 @@ void Tetris::Move_y()
 	{
 		for (int i = 0; i < 4; i++)
 			Field[tempSquare.getSquarePosition(i).x][tempSquare.getSquarePosition(i).y] = tempSquare.getColor();
-
-		nowSquare = nextSquare;
-		nowSquare.setPosition(STAGE_WIDTH / 2 - nowSquare.getWidth() / 2, 0);
-
-		nextSquare.setColor(1 + rand() % 7);
-		nextSquare.setShape(rand() % 7);
-		nextSquare.setPosition(0, 0);
+		nextFunc();
 	}
 }
 
@@ -246,6 +238,37 @@ void Tetris::Rotate()
 	nowSquare.Rotate();
 	if (isHit())
 		nowSquare = tempSquare;
+}
+
+void Tetris::nextFunc()
+{
+	nowSquare = nextSquare;
+	nowSquare.setPosition(STAGE_WIDTH / 2 - nowSquare.getWidth() / 2, 0);
+
+	nextSquare.setColor(1 + rand() % 7);
+	nextSquare.setShape(rand() % 7);
+}
+
+void Tetris::holdFunc()
+{
+	if (!holdSquare.getColor())
+	{
+		holdSquare.setColor(nowSquare.getColor());
+		holdSquare.setShape(nowSquare.getShape());
+		nextFunc();
+		return;
+	}
+	Square tempSquare = nowSquare;
+	nowSquare.setColor(holdSquare.getColor());
+	nowSquare.setShape(holdSquare.getShape());
+	if (isHit())
+		nowSquare = tempSquare;
+	else
+	{
+		holdSquare.setColor(nextSquare.getColor());
+		holdSquare.setShape(nextSquare.getShape());
+		nextFunc();
+	}
 }
 
 void Tetris::checkLine()

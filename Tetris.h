@@ -14,7 +14,7 @@ public:
 	int b7array[7];
 	int score;
 	int Field[STAGE_WIDTH][STAGE_HEIGHT];
-	bool isRotate, isHardDrop;
+	bool isRotate, isHardDrop, isHold;
 	float timer, delay;
 	void Initial(RenderWindow* app, Texture* tex);
 	void Input(Event& e);
@@ -27,6 +27,9 @@ public:
 	void Move_y();
 	void HardDrop();//Ó²½µ
 	void Rotate();
+	void nextFunc();
+	void holdFunc();
 	void checkLine();
 };
 
+static Square holdSquare;

@@ -77,13 +77,19 @@ void Square::setShape(int shape)
 		if (Figures[shape][i] == 5)
 			mid = i;
 	}
-	updata();
+	update();
 }
 
 void Square::setPosition(int x, int y)
 {
+	int dx = x - this->Pos.x;
+	int dy = y - this->Pos.y;
 	this->Pos = { x,y };
-	updata();
+	for (int i = 0; i < 4; i++)
+	{
+		squarePos[i].x += dx;
+		squarePos[i].y += dy;
+	}
 }
 
 void Square::Rotate()
@@ -96,10 +102,10 @@ void Square::Rotate()
 		squareShape[i].x = p.x - x;
 		squareShape[i].y = p.y + y;
 	}
-	updata();
+	update();
 }
 
-void Square::updata()
+void Square::update()
 {
 	int min_x = 3, min_y = 3, max_x = 0, max_y = 0;
 	for (int i = 0; i < 4; i++)
