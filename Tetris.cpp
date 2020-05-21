@@ -22,7 +22,7 @@ void Tetris::Start()
 
 	if (role == 1)
 	{
-	    mCorePoint = { P1_STAGE_CORNER_X,	P1_STAGE_CORNER_Y };
+		mCorePoint = { P1_STAGE_CORNER_X,	P1_STAGE_CORNER_Y };
 		nextCorePoint = { P1_NXET_CORNER_X, P1_NXET_CORNER_Y };
 	}
 	if (role == 2)
@@ -184,7 +184,7 @@ int Tetris::Bag7()
 		for (int i = 0; i < 7; i++)
 			temp[i] = i;
 		int k;
-		while (b7Int<7)
+		while (b7Int < 7)
 		{
 			k = rand() % 7;
 			if (temp[k] != -1)
@@ -236,8 +236,23 @@ void Tetris::Rotate()
 {
 	Square	tempSquare = nowSquare;
 	nowSquare.Rotate();
-	if (isHit())
-		nowSquare = tempSquare;
+	Square rtSquare = nowSquare;
+	for (int i = 0; i < rtSquare.getWidth(); i++)
+	{
+		nowSquare.setPosition(nowSquare.getPosition().x + i, nowSquare.getPosition().y);
+		if (isHit())
+		{
+			nowSquare = rtSquare;
+			nowSquare.setPosition(nowSquare.getPosition().x - i, nowSquare.getPosition().y);
+			if (isHit())
+				nowSquare = rtSquare;
+			else
+				return;
+		}
+		else
+			return;
+	}
+	nowSquare = tempSquare;
 }
 
 void Tetris::nextFunc()
