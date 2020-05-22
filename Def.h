@@ -23,6 +23,7 @@
 #define  P2_SCORE_CORNER_Y		110
 #define  HOLD_CORNER_X			650
 #define  HOLD_CORNER_Y			350
+#define DELAYTIME 0.5
 
 using namespace sf;
 

@@ -6,7 +6,7 @@ class Tetris
 public:
 	RenderWindow* app;
 	Vector2i mCorePoint, nextCorePoint;
-	Square nowSquare, nextSquare;
+	Square nowSquare, nextSquare, shadowSquare;
 	Texture *tTiles;
 	Sprite sTiles;
 	int role;
@@ -25,6 +25,8 @@ public:
 	int Bag7();
 	void Move_x(int dx);
 	void Move_y();
+	void shadowFunc();
+	void slowLoading();//µ×²¿»º³å
 	void HardDrop();//Ó²½µ
 	void Rotate();
 	void nextFunc();

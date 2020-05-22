@@ -17,7 +17,7 @@ void Tetris::Start()
 	isHardDrop = false;
 	isHold = false;
 	timer = 0;
-	delay = 0.5;
+	delay = DELAYTIME;
 	b7Int = 0;
 
 	if (role == 1)
@@ -63,7 +63,7 @@ void Tetris::Input(Event& e)
 			if (e.key.code == Keyboard::LControl)
 				isHardDrop = true;
 			if (e.key.code == Keyboard::S)
-				delay = 0.5;
+				delay = DELAYTIME;
 			if (e.key.code == Keyboard::LShift)
 				isHold = true;
 		}
@@ -87,7 +87,7 @@ void Tetris::Input(Event& e)
 			if (e.key.code == Keyboard::RControl)
 				isHardDrop = true;
 			if (e.key.code == Keyboard::Down)
-				delay = 0.5;
+				delay = DELAYTIME;
 			if (e.key.code == Keyboard::RShift)
 				isHold = true;
 		}
@@ -111,16 +111,35 @@ void Tetris::Update()
 		holdFunc();
 		isHold = false;
 	}
+	slowLoading();
 	if (timer > delay)
 	{
+		delay = DELAYTIME;
 		Move_y();
 		timer = 0;
 	}
+	shadowFunc();
 	checkLine();
 }
 
 void Tetris::Draw()
 {
+	sTiles.setColor(Color(100, 100, 100, 100));
+	for (int i = 0; i < STAGE_WIDTH; i++)
+	{
+		if (i >= nowSquare.getSquarePosition(nowSquare.getLeft()).x && i < nowSquare.getSquarePosition(nowSquare.getLeft()).x + nowSquare.getWidth())
+		{
+			for (int j = 0; j < STAGE_HEIGHT; j++)
+			{
+				sTiles.setTextureRect(IntRect(nowSquare.getColor() * GRIDSIZE, 0, GRIDSIZE, GRIDSIZE));
+				sTiles.setPosition(i * GRIDSIZE, j * GRIDSIZE);
+				sTiles.move(mCorePoint.x, mCorePoint.y);
+				app->draw(sTiles);
+			}
+		}
+	}
+	sTiles.setColor(Color(255, 255, 255, 255));
+
 	for (int i = 0; i < STAGE_WIDTH; i++)
 	{
 		for (int j = 0; j < STAGE_HEIGHT; j++)
@@ -133,6 +152,16 @@ void Tetris::Draw()
 			app->draw(sTiles);
 		}
 	}
+
+	sTiles.setColor(Color(155, 155, 155, 225));
+	for (int i = 0; i < 4; i++)
+	{
+		sTiles.setTextureRect(IntRect(shadowSquare.getColor() * GRIDSIZE, 0, GRIDSIZE, GRIDSIZE));
+		sTiles.setPosition(shadowSquare.getSquarePosition(i).x * GRIDSIZE, shadowSquare.getSquarePosition(i).y * GRIDSIZE);
+		sTiles.move(mCorePoint.x, mCorePoint.y);
+		app->draw(sTiles);
+	}
+	sTiles.setColor(Color(255, 255, 255, 255));
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -216,6 +245,32 @@ void Tetris::Move_y()
 		for (int i = 0; i < 4; i++)
 			Field[tempSquare.getSquarePosition(i).x][tempSquare.getSquarePosition(i).y] = tempSquare.getColor();
 		nextFunc();
+	}
+}
+
+void Tetris::slowLoading()
+{
+	Square	tempSquare = nowSquare;
+	nowSquare.setPosition(nowSquare.getPosition().x, nowSquare.getPosition().y + 1);
+
+	if (isHit())
+		delay = 2 * DELAYTIME;
+	nowSquare = tempSquare;
+}
+
+void Tetris::shadowFunc()
+{
+	Square	tempSquare = nowSquare;
+	for (int i = 0; i < STAGE_HEIGHT; i++)
+	{
+		nowSquare.setPosition(nowSquare.getPosition().x, nowSquare.getPosition().y + 1);
+		if (isHit())
+		{
+			nowSquare.setPosition(nowSquare.getPosition().x, nowSquare.getPosition().y - 1);
+			shadowSquare = nowSquare;
+			nowSquare = tempSquare;
+			break;
+		}
 	}
 }
 

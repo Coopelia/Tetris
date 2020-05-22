@@ -13,6 +13,7 @@ public:
 	int getColor(); //获取颜色
 	int getShape(); //获取形状
 	int getMid(); //获取中心点
+	int getLeft();//获取最左边方块编号
 	int getWidth(); //获取宽度
 	int getHeight(); //获取高度
 	Vector2i getSquarePosition(int i); //获取第i个方块坐标
@@ -24,6 +25,7 @@ protected:
 	int color; //颜色
 	int shape; //形状
 	int mid; //中心点（5）
+	int left; //最左边方块编号
 	int width, height; //宽、高
 	Vector2i Pos; //左上角坐标（core）
 	Vector2i squarePos[4]; //四个方块坐标（世界坐标系）
