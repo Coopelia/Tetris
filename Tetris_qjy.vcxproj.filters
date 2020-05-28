@@ -27,6 +27,9 @@
     <ClInclude Include="Square.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Button.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -42,6 +45,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Square.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Button.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -16,6 +16,7 @@ void Tetris::Start()
 	isRotate = false;
 	isHardDrop = false;
 	isHold = false;
+	isOver = false;
 	timer = 0;
 	delay = DELAYTIME;
 	b7Int = 0;
@@ -317,6 +318,8 @@ void Tetris::nextFunc()
 
 	nextSquare.setColor(1 + rand() % 7);
 	nextSquare.setShape(rand() % 7);
+	if (isHit())
+		isOver = true;
 }
 
 void Tetris::holdFunc()
