@@ -13,11 +13,14 @@ void Tetris::Start()
 	memset(Field, 0, sizeof(Field));
 	memset(b7array, 0, sizeof(b7array));
 	memset(Field, 0, sizeof(Field));
+	animationRow.clear();
 	isRotate = false;
 	isHardDrop = false;
 	isHold = false;
 	isOver = false;
 	timer = 0;
+	animationCtrValue = 1.0;
+	elapsedTime = 0.0;
 	delay = DELAYTIME;
 	b7Int = 0;
 
@@ -45,82 +48,88 @@ void Tetris::Start()
 
 void Tetris::Input(Event& e)
 {
-	if (role == 1)
+	if (!animationRow.size())
 	{
-		if (e.type == Event::KeyPressed)
+		if (role == 1)
 		{
-			if (e.key.code == Keyboard::W)
-				if (nowSquare.getShape() != 6)
-					isRotate = true;
-			if (e.key.code == Keyboard::A)
-				Move_x(-1);
-			else if (e.key.code == Keyboard::D)
-				Move_x(1);
-			if (e.key.code == Keyboard::S)
-				delay /= 10;
+			if (e.type == Event::KeyPressed)
+			{
+				if (e.key.code == Keyboard::W)
+					if (nowSquare.getShape() != 6)
+						isRotate = true;
+				if (e.key.code == Keyboard::A)
+					Move_x(-1);
+				else if (e.key.code == Keyboard::D)
+					Move_x(1);
+				if (e.key.code == Keyboard::S)
+					delay /= 10;
+			}
+			if (e.type == Event::KeyReleased)
+			{
+				if (e.key.code == Keyboard::LControl)
+					isHardDrop = true;
+				if (e.key.code == Keyboard::S)
+					delay = DELAYTIME;
+				if (e.key.code == Keyboard::LShift)
+					isHold = true;
+			}
 		}
-		if (e.type == Event::KeyReleased)
+		if (role == 2)
 		{
-			if (e.key.code == Keyboard::LControl)
-				isHardDrop = true;
-			if (e.key.code == Keyboard::S)
-				delay = DELAYTIME;
-			if (e.key.code == Keyboard::LShift)
-				isHold = true;
-		}
-	}
-	if (role == 2)
-	{
-		if (e.type == Event::KeyPressed)
-		{
-			if (e.key.code == Keyboard::Up)
-				if (nowSquare.getShape() != 6)
-					isRotate = true;
-			if (e.key.code == Keyboard::Left)
-				Move_x(-1);
-			else if (e.key.code == Keyboard::Right)
-				Move_x(1);
-			if (e.key.code == Keyboard::Down)
-				delay /= 10;
-		}
-		if (e.type == Event::KeyReleased)
-		{
-			if (e.key.code == Keyboard::RControl)
-				isHardDrop = true;
-			if (e.key.code == Keyboard::Down)
-				delay = DELAYTIME;
-			if (e.key.code == Keyboard::RShift)
-				isHold = true;
+			if (e.type == Event::KeyPressed)
+			{
+				if (e.key.code == Keyboard::Up)
+					if (nowSquare.getShape() != 6)
+						isRotate = true;
+				if (e.key.code == Keyboard::Left)
+					Move_x(-1);
+				else if (e.key.code == Keyboard::Right)
+					Move_x(1);
+				if (e.key.code == Keyboard::Down)
+					delay /= 10;
+			}
+			if (e.type == Event::KeyReleased)
+			{
+				if (e.key.code == Keyboard::RControl)
+					isHardDrop = true;
+				if (e.key.code == Keyboard::Down)
+					delay = DELAYTIME;
+				if (e.key.code == Keyboard::RShift)
+					isHold = true;
+			}
 		}
 	}
 }
 
 void Tetris::Update()
 {
-	if (isRotate)
+	if (!animationRow.size())
 	{
-		Rotate();
-		isRotate = false;
+		if (isRotate)
+		{
+			Rotate();
+			isRotate = false;
+		}
+		if (isHardDrop)
+		{
+			HardDrop();
+			isHardDrop = false;
+		}
+		if (isHold)
+		{
+			holdFunc();
+			isHold = false;
+		}
+		slowLoading();
+		if (timer > delay)
+		{
+			delay = DELAYTIME;
+			Move_y();
+			timer = 0;
+		}
+		shadowFunc();
+		checkLine();
 	}
-	if (isHardDrop)
-	{
-		HardDrop();
-		isHardDrop = false;
-	}
-	if (isHold)
-	{
-		holdFunc();
-		isHold = false;
-	}
-	slowLoading();
-	if (timer > delay)
-	{
-		delay = DELAYTIME;
-		Move_y();
-		timer = 0;
-	}
-	shadowFunc();
-	checkLine();
 }
 
 void Tetris::Draw()
@@ -141,9 +150,20 @@ void Tetris::Draw()
 	}
 	sTiles.setColor(Color(255, 255, 255, 255));
 
-	for (int i = 0; i < STAGE_WIDTH; i++)
+	for (int j = 0; j < STAGE_HEIGHT; j++)
 	{
-		for (int j = 0; j < STAGE_HEIGHT; j++)
+		bool flag = false;
+		for (int jj = 0; jj < animationRow.size(); jj++)
+		{
+			if (j == animationRow[jj])
+			{
+				flag = true;
+				break;
+			}
+		}
+		if (flag)
+			continue;
+		for (int i = 0; i < STAGE_WIDTH; i++)
 		{
 			if (Field[i][j] == 0)
 				continue;
@@ -190,6 +210,9 @@ void Tetris::Draw()
 			app->draw(sTiles);
 		}
 	}
+
+	if (animationRow.size())
+		animatieFunc();
 }
 
 bool Tetris::isHit()
@@ -346,20 +369,62 @@ void Tetris::holdFunc()
 
 void Tetris::checkLine()
 {
-	int k = STAGE_HEIGHT - 1;
-	int yCount = 0;
+	int xCount;
 	for (int j = STAGE_HEIGHT - 1; j > 0; j--)
 	{
-		int xCount = 0;
+		xCount = 0;
 		for (int i = 0; i < STAGE_WIDTH; i++)
-		{
 			if (Field[i][j])
 				xCount++;
-			Field[i][k] = Field[i][j];
+		if (xCount == STAGE_WIDTH)
+			animationRow.push_back(j);
+	}
+}
+
+void Tetris::animatieFunc()
+{
+	elapsedTime += m_clock.restart().asMilliseconds();
+	if (elapsedTime >= 100)
+	{
+		elapsedTime = 0;
+		Vector2f po = sTiles.getOrigin();
+		Vector2f ps = sTiles.getScale();
+		float pr = sTiles.getRotation();
+		sTiles.setOrigin(GRIDSIZE / 2, GRIDSIZE / 2);
+		sTiles.setScale(animationCtrValue, animationCtrValue);
+		sTiles.rotate(360 * animationCtrValue);
+		for (int i = 0; i < animationRow.size(); i++)
+		{
+			for (int j = 0; j < STAGE_WIDTH; j++)
+			{
+				sTiles.setTextureRect(IntRect(Field[j][animationRow[i]] * GRIDSIZE, 0, GRIDSIZE, GRIDSIZE));
+				sTiles.setPosition((j + 0.5) * GRIDSIZE, (animationRow[i] + 0.5) * GRIDSIZE);
+				sTiles.move(mCorePoint.x, mCorePoint.y);
+				app->draw(sTiles);
+			}
 		}
-		if (xCount < STAGE_WIDTH)
-			k--;
-		else
-			score += 10;
+		sTiles.setOrigin(po);
+		sTiles.setScale(ps);
+		sTiles.setRotation(pr);
+		animationCtrValue -= 0.2;
+		if (animationCtrValue < 0.1)
+		{
+			animationCtrValue=1.0;
+			int k = STAGE_HEIGHT - 1;
+			int xCount;
+			for (int j = STAGE_HEIGHT - 1; j > 0; j--)
+			{
+				xCount = 0;
+				for (int i = 0; i < STAGE_WIDTH; i++)
+				{
+					if (Field[i][j])
+						xCount++;
+					Field[i][k] = Field[i][j];
+				}
+				if (xCount < STAGE_WIDTH)
+					k--;
+			}
+			animationRow.clear();
+		}
 	}
 }

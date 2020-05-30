@@ -14,6 +14,10 @@ public:
 	int b7array[7];
 	int score;
 	int Field[STAGE_WIDTH][STAGE_HEIGHT];
+	std::vector<int> animationRow;
+	float animationCtrValue;
+	Clock m_clock;
+	float elapsedTime;
 	bool isRotate, isHardDrop, isHold;
 	bool isOver;
 	float timer, delay;
@@ -26,6 +30,7 @@ public:
 	int Bag7();
 	void Move_x(int dx);
 	void Move_y();
+	void animatieFunc();
 	void shadowFunc();
 	void slowLoading();//µ×²¿»º³å
 	void HardDrop();//Ó²½µ
